@@ -10,5 +10,7 @@ public:
     void Deallocate(void *ptr, size_t byte);
     void* FetchFromCentralCache(size_t index, size_t byte);
 private:
-    FreeList *_freelists[NFREELIST];
+    FreeList _freelists[NFREELIST];
 };
+
+inline thread_local ThreadCache *thread_local_data_ = nullptr;

@@ -5,13 +5,22 @@
 #include <Windows.h>
 #include <memoryapi.h>
 #include <assert.h>
+#include <thread>
+#include <mutex>
 using std::cin;
 using std::cout;
+
+//使得页编号适配不同的windows环境
+#ifdef _WIN64
+    using PAGE_ID = unsigned long long;
+#elif _WIN32
+    using PAGE_ID = size_t;
+#endif
 
 const int MAX_BYTES = 256 * 1024;
 const int NFREELIST = 208;
 
-void* &NextObj(void *obj)
+inline void* &NextObj(void *obj)
 {
     return *(void**)obj;
 }
@@ -38,7 +47,7 @@ public:
         return _freelist == nullptr;
     }
 private:
-    void *_freelist;
+    void *_freelist = nullptr;
 };
 
 class SizeClass
@@ -80,7 +89,7 @@ public:
     }
     static inline size_t _RoundUp(size_t byte, size_t alignNum)
     {
-        return (byte + alignNum - 1) & (~alignNum);
+        return (byte + alignNum - 1) & (~(alignNum - 1));
     }
 
     //计算数据存放对应的桶
@@ -94,19 +103,19 @@ public:
         }
         else if(byte <= 1024)
         {
-            return _Index(byte, 4) + pre_sum[1];
+            return _Index(byte - 128, 4) + pre_sum[1];
         }
         else if(byte <= 8 * 1024)
         {
-            return _Index(byte, 7) + pre_sum[2];
+            return _Index(byte - 1024, 7) + pre_sum[2];
         }
         else if(byte <= 64 * 1024)
         {
-            return _Index(byte, 10) + pre_sum[3];
+            return _Index(byte - 8 * 1024, 10) + pre_sum[3];
         }
         else if(byte <= 256 * 1024)
         {
-            return _Index(byte, 13) + pre_sum[4];
+            return _Index(byte - 64 * 1024, 13) + pre_sum[4];
         }
         else
         {
@@ -117,4 +126,47 @@ public:
     {
         return ((byte + (1 << alignBit) - 1) >> alignBit) - 1;
     }
+};
+
+struct Span
+{
+    PAGE_ID pageId; //页编号
+    Span *prev = nullptr;
+    Span *next = nullptr;
+    size_t n = 0; //页数量
+    void *freelist = nullptr;
+};
+
+class SpanList
+{
+public:
+    SpanList()
+    {
+        head = new Span;
+        head->prev = head;
+        head->next = head;
+    }
+    void Insert(Span *pos, Span *newSpan)
+    {
+        assert(pos);
+        assert(newSpan);
+        pos->prev->next = newSpan;
+        newSpan->prev = pos->prev;
+        newSpan->next = pos;
+        pos->prev = newSpan;
+    }
+    void Erase(Span *delSpan)
+    {
+        assert(delSpan);
+        assert(delSpan != head);
+        delSpan->prev->next = delSpan->next;
+        delSpan->next->prev = delSpan->prev;
+    }
+    ~SpanList()
+    {
+        delete head;
+    }
+private:
+    Span *head;
+    std::mutex mtx; //桶锁
 };
