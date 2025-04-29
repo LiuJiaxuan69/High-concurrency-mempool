@@ -12,6 +12,7 @@ using std::cin;
 using std::cout;
 
 #undef min
+#undef max
 
 //使得页编号适配不同的windows环境
 // #ifdef _WIN64
@@ -25,9 +26,11 @@ using PAGE_ID = size_t;
 
 const inline int MAX_BYTES = 256 * 1024;
 const inline int NFREELIST = 208;
+const inline int PAGE_SHIFT = 13;
 const inline size_t low_level = 2;
 const inline size_t up_level = 512;
 const inline size_t middle_level = (low_level + up_level) >> 1;
+const inline size_t NPAGES = 129;
 
 
 inline void* &NextObj(void *obj)
@@ -155,6 +158,15 @@ public:
         else if(num > up_level) num = up_level;
         return num;
     }
+    static inline size_t NumMovePage(size_t byte)
+    {
+        size_t num = NumMoveSize(byte);
+        size_t total_byte = num * byte;
+        size_t page_num = total_byte >> PAGE_SHIFT;
+        //page_num至少为1
+        if(page_num == 0) return 1;
+        return page_num;
+    }
 };
 
 struct Span
@@ -170,6 +182,14 @@ struct Span
 class SpanList
 {
 public:
+    Span *Begin()
+    {
+        return head->next;
+    }
+    Span *End()
+    {
+        return head;
+    }
     SpanList()
     {
         head = new Span;
