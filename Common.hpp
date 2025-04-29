@@ -7,18 +7,28 @@
 #include <assert.h>
 #include <thread>
 #include <mutex>
+#include <algorithm>
 using std::cin;
 using std::cout;
 
-//使得页编号适配不同的windows环境
-#ifdef _WIN64
-    using PAGE_ID = unsigned long long;
-#elif _WIN32
-    using PAGE_ID = size_t;
-#endif
+#undef min
 
-const int MAX_BYTES = 256 * 1024;
-const int NFREELIST = 208;
+//使得页编号适配不同的windows环境
+// #ifdef _WIN64
+//     using PAGE_ID = unsigned long long;
+// #elif _WIN32
+//     using PAGE_ID = size_t;
+// #endif
+
+//size_t天然就适配不同环境
+using PAGE_ID = size_t;
+
+const inline int MAX_BYTES = 256 * 1024;
+const inline int NFREELIST = 208;
+const inline size_t low_level = 2;
+const inline size_t up_level = 512;
+const inline size_t middle_level = (low_level + up_level) >> 1;
+
 
 inline void* &NextObj(void *obj)
 {
@@ -42,12 +52,22 @@ public:
         _freelist = NextObj(obj);
         return obj;
     }
+    void PushRange(void *start, void *end)
+    {
+        NextObj(end) = _freelist;
+        _freelist = start;
+    }
     bool Empty()
     {
         return _freelist == nullptr;
     }
+    size_t& MaxSize()
+    {
+        return _maxSize;
+    }
 private:
     void *_freelist = nullptr;
+    size_t _maxSize = 1;
 };
 
 class SizeClass
@@ -126,6 +146,15 @@ public:
     {
         return ((byte + (1 << alignBit) - 1) >> alignBit) - 1;
     }
+    static inline size_t NumMoveSize(size_t byte)
+    {
+        //控制获取的freelist在[2, 512]范围内
+        assert(byte > 0);
+        size_t num = MAX_BYTES / byte;
+        if(num < low_level) num = low_level;
+        else if(num > up_level) num = up_level;
+        return num;
+    }
 };
 
 struct Span
@@ -134,6 +163,7 @@ struct Span
     Span *prev = nullptr;
     Span *next = nullptr;
     size_t n = 0; //页数量
+    size_t useCount = 0;
     void *freelist = nullptr;
 };
 
@@ -168,5 +198,6 @@ public:
     }
 private:
     Span *head;
+public:
     std::mutex mtx; //桶锁
 };
