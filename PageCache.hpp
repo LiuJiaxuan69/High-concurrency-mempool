@@ -10,7 +10,7 @@ public:
     {
         return &_pageCache;
     }
-    Span *NewSpan(size_t byte);
+    Span *NewSpan(size_t k);
 private:
     PageCache() = default;
     PageCache(const PageCache&) = delete;
@@ -23,7 +23,7 @@ private:
     static PageCache _pageCache;
 public:
     std::mutex mtx;
-    SpanList _spanLists[NPAGES];
+    SpanList _spanLists[NPAGES + 1];
 };
 
 inline PageCache PageCache::_pageCache;

@@ -30,7 +30,7 @@ const inline int PAGE_SHIFT = 13;
 const inline size_t low_level = 2;
 const inline size_t up_level = 512;
 const inline size_t middle_level = (low_level + up_level) >> 1;
-const inline size_t NPAGES = 129;
+const inline size_t NPAGES = 128;
 
 
 inline void* &NextObj(void *obj)
@@ -211,6 +211,20 @@ public:
         assert(delSpan != head);
         delSpan->prev->next = delSpan->next;
         delSpan->next->prev = delSpan->prev;
+    }
+    void PushFront(Span *newSpan)
+    {
+        Insert(Begin(), newSpan);
+    }
+    Span *PopFront()
+    {
+        Span *front = head->next;
+        Erase(front);
+        return front;
+    }
+    bool Empty()
+    {
+        return head->next == nullptr;
     }
     ~SpanList()
     {
