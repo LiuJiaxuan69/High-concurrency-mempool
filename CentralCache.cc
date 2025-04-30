@@ -62,6 +62,6 @@ Span* CentralCache::GetOneSpan(SpanList &list, size_t byte)
     //回去之前上锁
     list.mtx.lock();
     
-    list.Insert(list.Begin(), span);
+    list.PushFront(span);
     return span;
 }
