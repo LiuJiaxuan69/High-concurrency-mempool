@@ -9,7 +9,7 @@ public:
     {
         return &_centralCache;
     }
-    size_t FetchRangeObj(void *&start, void *&end, size_t batchNum, size_t byte);
+    size_t FetchRangeObj(Object *&start, Object *&end, size_t batchNum, size_t byte);
     Span *GetOneSpan(SpanList &list, size_t byte);
 public:
     SpanList spanLists[NFREELIST];

@@ -1,7 +1,7 @@
 #include "CentralCache.hpp"
 #include "PageCache.hpp"
 
-size_t CentralCache::FetchRangeObj(void *&start, void *&end, size_t batchNum, size_t byte)
+size_t CentralCache::FetchRangeObj(Object *&start, Object *&end, size_t batchNum, size_t byte)
 {
     size_t index = SizeClass::Index(byte);
     spanLists[index].mtx.lock();
@@ -14,14 +14,14 @@ size_t CentralCache::FetchRangeObj(void *&start, void *&end, size_t batchNum, si
     end = start;
     size_t i = 0, actual_num = 1;
     //最多获取到链表尾部
-    while(i < batchNum - 1 && NextObj(end))
+    while(i < batchNum - 1 && end->next != nullptr)
     {
-        end = NextObj(end);
+        end = end->next;
         ++i;
         ++actual_num;
     }
-    span->freelist = NextObj(end);
-    NextObj(end) = nullptr;
+    span->freelist = end->next;
+    end->next = nullptr;
     span->useCount += actual_num;
     spanLists[index].mtx.unlock();
     return actual_num;
@@ -32,7 +32,7 @@ Span* CentralCache::GetOneSpan(SpanList &list, size_t byte)
     //若找得到剩余的的Span则直接返回
     while(it != list.End())
     {
-        if(it != nullptr) return it;
+        if(it->freelist != nullptr) return it;
         it = it->next;
     }
 
@@ -45,20 +45,19 @@ Span* CentralCache::GetOneSpan(SpanList &list, size_t byte)
     PageCache::GetInstance()->mtx.unlock();
 
     //对页切片
-    char *start = (char*)(span->pageId << PAGE_SHIFT);
+    std::byte *start = (std::byte*)(span->pageId << PAGE_SHIFT);
     size_t size = span->n << PAGE_SHIFT;
-    char *end = start + size;
+    std::byte *end = start + size;
 
-    span->freelist = start;
+    span->freelist = reinterpret_cast<Object *>(start);
     start += byte;
-    void *tail = span->freelist;
+    Object *tail = span->freelist;
     while(start < end)
     {
-        NextObj(tail) = start;
-        tail = start;
+        tail->next = reinterpret_cast<Object *>(start);
+        tail = reinterpret_cast<Object *>(start);
         start += byte;
     }
-
     //回去之前上锁
     list.mtx.lock();
     
