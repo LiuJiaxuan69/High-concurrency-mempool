@@ -4,12 +4,12 @@
 void * ThreadCache::Allocate(size_t byte)
 {
     assert(byte <= MAX_BYTES);
-    void *ret = nullptr;
+    Object *ret = nullptr;
     size_t memlen = SizeClass::RoundUp(byte);
     size_t index = SizeClass::Index(byte);
     if(_freelists[index].Empty())
     {
-        ret = FetchFromCentralCache(index, byte);
+        ret = FetchFromCentralCache(index, memlen);
     }
     else
     {
@@ -18,16 +18,18 @@ void * ThreadCache::Allocate(size_t byte)
     return ret;
 }
 
-void ThreadCache::Deallocate(void *ptr, size_t byte)
+void ThreadCache::Deallocate(void *ptr_, size_t byte)
 {
-    assert(ptr);
+    assert(ptr_);
+    Object *ptr = reinterpret_cast<Object *>(ptr_);
     assert(byte <= MAX_BYTES);
     size_t index = SizeClass::Index(byte);
     _freelists[index].Push(ptr);
 }
 
-void* ThreadCache::FetchFromCentralCache(size_t index, size_t byte)
+Object* ThreadCache::FetchFromCentralCache(size_t index, size_t byte)
 {
+    //计算实际获取的块数量
     size_t batchNum = std::min(SizeClass::NumMoveSize(byte), _freelists[index].MaxSize());
     if(batchNum == _freelists[index].MaxSize())
     {
@@ -37,12 +39,11 @@ void* ThreadCache::FetchFromCentralCache(size_t index, size_t byte)
     }
 
     //处理预备数据存放到freelists以及就绪数据返回
-    void *start = nullptr, *end = nullptr;
+    Object *start = nullptr, *end = nullptr;
     size_t actualNum = CentralCache::GetInstance()->FetchRangeObj(start, end, batchNum, byte);
-    if(start == end) assert(start == end);
-    else
+    if(start != end)
     {
-        _freelists[index].PushRange(NextObj(start), end);
+        _freelists[index].PushRange(start->next, end);
     }
     return start;
 }
