@@ -33,31 +33,37 @@ const inline size_t middle_level = (low_level + up_level) >> 1;
 const inline size_t NPAGES = 128;
 
 
-inline void* &NextObj(void *obj)
-{
-    return *(void**)obj;
-}
+// inline void* &NextObj(void *obj)
+// {
+//     return *(void**)obj;
+// }
+
+union Object {
+    Object *next = nullptr;
+    std::byte data[0];
+};
 
 class FreeList
 {
 public:
-    void Push(void *obj)
+    void Push(Object *obj)
     {
         assert(obj);
-        NextObj(obj) = _freelist;
+        obj->next = _freelist;
+        // NextObj(obj) = _freelist;
         _freelist = obj;
         
     }
-    void* Pop()
+    Object *Pop()
     {
         assert(_freelist);
-        void *obj = _freelist;
-        _freelist = NextObj(obj);
+        Object *obj = _freelist;
+        _freelist = obj->next;
         return obj;
     }
-    void PushRange(void *start, void *end)
+    void PushRange(Object *start, Object *end)
     {
-        NextObj(end) = _freelist;
+        end->next = _freelist;
         _freelist = start;
     }
     bool Empty()
@@ -69,7 +75,7 @@ public:
         return _maxSize;
     }
 private:
-    void *_freelist = nullptr;
+    Object *_freelist = nullptr;
     size_t _maxSize = 1;
 };
 
@@ -176,7 +182,7 @@ struct Span
     Span *next = nullptr;
     size_t n = 0; //页数量
     size_t useCount = 0;
-    void *freelist = nullptr;
+    Object *freelist = nullptr;
 };
 
 class SpanList
@@ -224,7 +230,7 @@ public:
     }
     bool Empty()
     {
-        return head->next == nullptr;
+        return head->next == head;
     }
     ~SpanList()
     {
