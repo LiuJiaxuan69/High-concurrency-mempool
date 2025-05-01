@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <new>
 #include "FixedMempool.hpp"
 #include "Concurrent.hpp"
 using namespace std;
@@ -66,23 +67,47 @@ namespace ConcurrentTest
     {
         for (int i = 1; i <= 5; ++i)
         {
-            ConcurrentAlloc(6);
+            void *ptr = ConcurrentAlloc(6);
+            auto output1 = std::this_thread::get_id();
+            std::cout << std::format("{}:{}\n", output1, ptr);
         }
     }
 
     void AllocateFunc2()
     {
-        for (int i = 1; i <= 5; ++i)
+        for (int i = 1; i <= 514; ++i)
         {
-            ConcurrentAlloc(25);
+            void *ptr = ConcurrentAlloc(25);
+            auto output1 = std::this_thread::get_id();
+            std::cout << std::format("{}:{}\n", output1, ptr);
         }
+    }
+    void AllocateFunc3()
+    {
+        for (int i = 1; i <=128; ++i)
+        {
+            void *ptr = ConcurrentAlloc(4096);
+            auto output1 = std::this_thread::get_id();
+            std::cout << std::format("{}:{}\n", output1, ptr);
+        }
+        for (int i = 1; i <= 514; ++i)
+        {
+            void *ptr = ConcurrentAlloc(25);
+            auto output1 = std::this_thread::get_id();
+            // std::cout << std::format("{}:{}\n", output1, ptr);
+        }
+        string *ptr2 = testAlloc<string>();
+        cout << *ptr2 << endl;
     }
     void ConcurrentTest()
     {
-        thread t1(AllocateFunc1);
-        t1.join();
-        thread t2(AllocateFunc2);
-        t2.join();
+        // AllocateFunc2();
+        // thread t1(AllocateFunc1);
+        // thread t2(AllocateFunc2);
+        thread t3(AllocateFunc3);
+        // t1.join();
+        // t2.join();
+        t3.join();
     }
 };
 
