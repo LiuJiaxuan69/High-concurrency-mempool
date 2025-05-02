@@ -42,6 +42,7 @@ Span* CentralCache::GetOneSpan(SpanList &list, size_t byte)
     //需要向上层PageCache申请Page进行分割
     PageCache::GetInstance()->mtx.lock();
     Span *span = PageCache::GetInstance()->NewSpan(SizeClass::NumMovePage(byte));
+    span->isusing = true;
     PageCache::GetInstance()->mtx.unlock();
 
     //对页切片
@@ -55,12 +56,49 @@ Span* CentralCache::GetOneSpan(SpanList &list, size_t byte)
     while(start < end)
     {
         tail->next = reinterpret_cast<Object *>(start);
-        tail = reinterpret_cast<Object *>(start);
+        tail = tail->next;
         start += byte;
     }
+    tail->next = nullptr;
     //回去之前上锁
     list.mtx.lock();
     
     list.PushFront(span);
     return span;
+}
+
+void CentralCache::ReleaseListToSpans(Object *start, size_t byte)
+{
+    size_t index = SizeClass::Index(byte);
+    spanLists[index].mtx.lock();
+    while(start)
+    {
+        Object *next = start->next;
+        //获取映射的*span并归还
+        PageCache::GetInstance()->mtx.lock();
+        Span *span = PageCache::GetInstance()->MapAddrToSpan(start);
+        PageCache::GetInstance()->mtx.unlock();
+        start->next = span->freelist;
+        span->freelist = start;
+        span->useCount--;
+        
+        //若userCount为0，则说明所有内存块均已归还，此时可以将内存块交给上层
+        if(span->useCount == 0)
+        {
+            spanLists[index].Erase(span);
+
+            span->freelist = nullptr;
+            span->next = nullptr;
+            span->prev = nullptr;
+
+            spanLists[index].mtx.unlock();
+            PageCache::GetInstance()->mtx.lock();
+            PageCache::GetInstance()->ReleaseSpanToPageCache(span);
+            PageCache::GetInstance()->mtx.unlock();
+            spanLists[index].mtx.lock();
+        }
+
+        start = next;
+    }
+    spanLists[index].mtx.unlock();
 }

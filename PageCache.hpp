@@ -11,6 +11,8 @@ public:
         return &_pageCache;
     }
     Span *NewSpan(size_t k);
+    Span *MapAddrToSpan(void *addr);
+    void ReleaseSpanToPageCache(Span *span);
 private:
     PageCache() = default;
     PageCache(const PageCache&) = delete;
@@ -24,6 +26,7 @@ private:
 public:
     std::mutex mtx;
     SpanList _spanLists[NPAGES + 1];
+    std::unordered_map<PAGE_ID, Span*> PageIdToSpan;
 };
 
 inline PageCache PageCache::_pageCache;

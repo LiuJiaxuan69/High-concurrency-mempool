@@ -8,6 +8,8 @@
 #include <thread>
 #include <mutex>
 #include <algorithm>
+#include <unordered_map>
+
 using std::cin;
 using std::cout;
 
@@ -52,19 +54,33 @@ public:
         obj->next = _freelist;
         // NextObj(obj) = _freelist;
         _freelist = obj;
-        
+        ++_size;
     }
     Object *Pop()
     {
         assert(_freelist);
         Object *obj = _freelist;
         _freelist = obj->next;
+        --_size;
         return obj;
     }
-    void PushRange(Object *start, Object *end)
+    void PushRange(Object *start, Object *end, size_t num)
     {
         end->next = _freelist;
         _freelist = start;
+        _size += num;
+    }
+    void PopRange(Object *&start, Object *&end, size_t num)
+    {
+        assert(num <= _size);
+        start = _freelist, end = _freelist;
+        for(int i = 1; i < num; ++i)
+        {
+            end = end->next;
+        }
+        _freelist = end->next;
+        end->next = nullptr;
+        _size -= num;
     }
     bool Empty()
     {
@@ -74,9 +90,14 @@ public:
     {
         return _maxSize;
     }
+    size_t Size()
+    {
+        return _size;
+    }
 private:
     Object *_freelist = nullptr;
     size_t _maxSize = 1;
+    size_t _size = 0;
 };
 
 class SizeClass
@@ -183,6 +204,7 @@ struct Span
     size_t n = 0; //页数量
     size_t useCount = 0;
     Object *freelist = nullptr;
+    bool isusing = false;
 };
 
 class SpanList

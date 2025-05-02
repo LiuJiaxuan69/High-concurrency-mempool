@@ -24,7 +24,8 @@ T* testAlloc(Args&&... args)
     return ret;
 }
 
-inline void* ConcurrentFree(void *ptr)
+inline void* ConcurrentFree(void *ptr,size_t byte)
 {
+    thread_local_data_->Deallocate(ptr, byte);
     return nullptr;
 }

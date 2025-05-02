@@ -11,6 +11,7 @@ public:
     }
     size_t FetchRangeObj(Object *&start, Object *&end, size_t batchNum, size_t byte);
     Span *GetOneSpan(SpanList &list, size_t byte);
+    void ReleaseListToSpans(Object *start, size_t byte);
 public:
     SpanList spanLists[NFREELIST];
 private:
