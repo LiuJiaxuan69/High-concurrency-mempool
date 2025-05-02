@@ -3,6 +3,7 @@
 #include <new>
 #include "FixedMempool.hpp"
 #include "Concurrent.hpp"
+#include "PageCache.hpp"
 using namespace std;
 
 namespace FixedMempoolTestTunc
@@ -65,55 +66,70 @@ namespace ConcurrentTest
 {
     void AllocateFunc1()
     {
-        for (int i = 1; i <= 5; ++i)
+        vector<void *> tmp;
+        for (int i = 1; i <= 128; ++i)
         {
             void *ptr = ConcurrentAlloc(6);
+            tmp.push_back(ptr);
             auto output1 = std::this_thread::get_id();
-            std::cout << std::format("{}:{}\n", output1, ptr);
+            // std::cout << std::format("{}:{}\n", output1, ptr);
         }
+        for(auto e: tmp) ConcurrentFree(e, 6);
     }
 
     void AllocateFunc2()
     {
-        for (int i = 1; i <= 514; ++i)
+        vector<void *> tmp;
+        for (int i = 1; i <= 1024; ++i)
         {
             void *ptr = ConcurrentAlloc(25);
-            auto output1 = std::this_thread::get_id();
-            std::cout << std::format("{}:{}\n", output1, ptr);
-        }
-    }
-    void AllocateFunc3()
-    {
-        for (int i = 1; i <=128; ++i)
-        {
-            void *ptr = ConcurrentAlloc(4096);
-            auto output1 = std::this_thread::get_id();
-            std::cout << std::format("{}:{}\n", output1, ptr);
-        }
-        for (int i = 1; i <= 514; ++i)
-        {
-            void *ptr = ConcurrentAlloc(25);
+            tmp.push_back(ptr);
             auto output1 = std::this_thread::get_id();
             // std::cout << std::format("{}:{}\n", output1, ptr);
         }
-        string *ptr2 = testAlloc<string>();
-        cout << *ptr2 << endl;
+        for(auto e: tmp) ConcurrentFree(e, 25);
+    }
+    void AllocateFunc3()
+    {
+        vector<void *> tmp;
+        for (int i = 1; i <=512; ++i)
+        {
+            void *ptr = ConcurrentAlloc(4096);
+            tmp.push_back(ptr);
+            auto output1 = std::this_thread::get_id();
+            // std::cout << std::format("{}:{}\n", output1, ptr);
+        }
+        for(auto e: tmp) ConcurrentFree(e, 4096);
+        
     }
     void ConcurrentTest()
     {
-        // AllocateFunc2();
-        // thread t1(AllocateFunc1);
-        // thread t2(AllocateFunc2);
+        // AllocateFunc3();
+        thread t1(AllocateFunc1);
+        thread t2(AllocateFunc2);
         thread t3(AllocateFunc3);
-        // t1.join();
-        // t2.join();
+        t1.join();
+        t2.join();
         t3.join();
+        for(int i = 1; i <= 128; ++i)
+        {
+            if(PageCache::GetInstance()->_spanLists[i].Begin() != \
+            PageCache::GetInstance()->_spanLists[i].End())
+            {
+                cout << i << ":";
+            int num = 0;
+            for(auto it = PageCache::GetInstance()->_spanLists[i].Begin(); \
+            it != PageCache::GetInstance()->_spanLists[i].End(); it = it->next)
+            ++num; cout << num << endl;
+            }
+        }
     }
 };
 
 int main()
 {
     // TestObjectPool();
+    while(true)
     ConcurrentTest::ConcurrentTest();
     return 0;
 }
