@@ -9,7 +9,7 @@ Span *PageCache::NewSpan(size_t k)
         if (ptr == nullptr)
             throw std::bad_alloc();
         // 将该内存分成两份
-        Span *newSpan = new Span();
+        Span *newSpan = GetSpanPool().New();
         newSpan->n = k;
         newSpan->pageId = (PAGE_ID)ptr >> PAGE_SHIFT;
         PageIdToSpan[newSpan->pageId] = newSpan;
@@ -32,7 +32,7 @@ Span *PageCache::NewSpan(size_t k)
             continue;
         // 发现非空Span，可以将其分割为两份Span
         Span *span = _spanLists[i].PopFront();
-        Span *kspan = new Span();
+        Span *kspan = GetSpanPool().New();
         kspan->pageId = span->pageId;
         kspan->n = k;
         span->pageId += k;
@@ -56,12 +56,12 @@ Span *PageCache::NewSpan(size_t k)
     if (ptr == nullptr)
         throw std::bad_alloc();
     // 将该内存分成两份
-    Span *newSpan = new Span();
+    Span *newSpan = GetSpanPool().New();
     newSpan->n = NPAGES;
     newSpan->pageId = (PAGE_ID)ptr >> PAGE_SHIFT;
 
     // 直接从newSpan中切割
-    Span *kspan = new Span();
+    Span *kspan = GetSpanPool().New();
     kspan->pageId = newSpan->pageId;
     kspan->n = k;
     newSpan->pageId += k;
@@ -96,7 +96,7 @@ void PageCache::ReleaseSpanToPageCache(Span *span)
     {
         void *ptr = (void*)(span->pageId << PAGE_SHIFT);
         VirtualFree(ptr, 0, MEM_RELEASE);
-        delete span;
+        GetSpanPool().Delete(span);
         return;
     }
     while (true)
@@ -115,7 +115,7 @@ void PageCache::ReleaseSpanToPageCache(Span *span)
 
         // 删除被合并的span
         _spanLists[prevspan->n].Erase(prevspan);
-        delete prevspan;
+        GetSpanPool().Delete(prevspan);
     }
     // 查找span后面可以合并的Span
     while (true)
@@ -133,7 +133,7 @@ void PageCache::ReleaseSpanToPageCache(Span *span)
 
         // 删除被合并的span
         _spanLists[nextspan->n].Erase(nextspan);
-        delete nextspan;
+        GetSpanPool().Delete(nextspan);
     }
 
     // 修改合并好的 span 的 状态

@@ -9,6 +9,7 @@
 #include <mutex>
 #include <algorithm>
 #include <unordered_map>
+#include "FixedMempool.hpp"
 
 using std::cin;
 using std::cout;
@@ -207,6 +208,12 @@ struct Span
     bool isusing = false;
 };
 
+// 全局内存池（延迟初始化，避免顺序问题）
+inline FLMemPool<Span>& GetSpanPool() {
+    static FLMemPool<Span> pool;
+    return pool;
+}
+
 class SpanList
 {
 public:
@@ -220,7 +227,7 @@ public:
     }
     SpanList()
     {
-        head = new Span;
+        head = GetSpanPool().New();
         head->prev = head;
         head->next = head;
     }
@@ -256,7 +263,7 @@ public:
     }
     ~SpanList()
     {
-        delete head;
+        GetSpanPool().Delete(head);
     }
 private:
     Span *head;
