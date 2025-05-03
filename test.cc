@@ -102,6 +102,42 @@ namespace ConcurrentTest
         for(auto e: tmp) ConcurrentFree(e, 4096);
         
     }
+    void AllocateFunc4()
+    {
+        vector<void *> tmp;
+        for (int i = 1; i <=4; ++i)
+        {
+            void *ptr = ConcurrentAlloc(257 * 1024);
+            tmp.push_back(ptr);
+            auto output1 = std::this_thread::get_id();
+            // std::cout << std::format("{}:{}\n", output1, ptr);
+        }
+        for(auto e: tmp) ConcurrentFree(e, 257 * 1024);
+    }
+    void AllocateFunc5()
+    {
+        vector<void *> tmp;
+        for (int i = 1; i <=4; ++i)
+        {
+            void *ptr = ConcurrentAlloc(512 * 1024);
+            tmp.push_back(ptr);
+            auto output1 = std::this_thread::get_id();
+            // std::cout << std::format("{}:{}\n", output1, ptr);
+        }
+        for(auto e: tmp) ConcurrentFree(e, 512 * 1024);
+    }
+    void AllocateFunc6()
+    {
+        vector<void *> tmp;
+        for (int i = 1; i <=6; ++i)
+        {
+            void *ptr = ConcurrentAlloc(129 * 8 * 1024);
+            tmp.push_back(ptr);
+            auto output1 = std::this_thread::get_id();
+            // std::cout << std::format("{}:{}\n", output1, ptr);
+        }
+        for(auto e: tmp) ConcurrentFree(e, 1024 * 1024);
+    }
     void ConcurrentTest()
     {
         // AllocateFunc3();
@@ -124,12 +160,21 @@ namespace ConcurrentTest
             }
         }
     }
+    void MaxSizeTest()
+    {
+        // thread t1(AllocateFunc4);
+        // thread t2(AllocateFunc5);
+        thread t3(AllocateFunc6);
+        // t1.join();
+        // t2.join();
+        t3.join();
+    }
 };
 
 int main()
 {
     // TestObjectPool();
-    while(true)
-    ConcurrentTest::ConcurrentTest();
+    // while(true)
+    ConcurrentTest::MaxSizeTest();
     return 0;
 }
