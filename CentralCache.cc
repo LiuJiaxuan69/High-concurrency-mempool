@@ -75,9 +75,7 @@ void CentralCache::ReleaseListToSpans(Object *start, size_t byte)
     {
         Object *next = start->next;
         //获取映射的*span并归还
-        PageCache::GetInstance()->mtx.lock();
         Span *span = PageCache::GetInstance()->MapAddrToSpan(start);
-        PageCache::GetInstance()->mtx.unlock();
         start->next = span->freelist;
         span->freelist = start;
         span->useCount--;

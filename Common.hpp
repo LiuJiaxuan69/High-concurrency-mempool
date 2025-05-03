@@ -134,7 +134,7 @@ public:
         }
         else
         {
-            assert(false);
+            return _RoundUp(byte, 1 << PAGE_SHIFT);
         }
     }
     static inline size_t _RoundUp(size_t byte, size_t alignNum)
