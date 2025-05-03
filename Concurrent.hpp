@@ -14,6 +14,7 @@ inline void* ConcurrentAlloc(size_t byte)
         PageCache::GetInstance()->mtx.lock();
         Span *span = PageCache::GetInstance()->NewSpan(pageNum);
         span->isusing = true;
+        span->objSize = alignbyte;
         PageCache::GetInstance()->mtx.unlock();
         void* ptr = (void*)(span->pageId << PAGE_SHIFT);
 		return ptr;
@@ -36,11 +37,12 @@ T* testAlloc(Args&&... args)
     return ret;
 }
 
-inline void ConcurrentFree(void *ptr,size_t byte)
+inline void ConcurrentFree(void *ptr)
 {
+    Span *span = PageCache::GetInstance()->MapAddrToSpan(ptr);
+    size_t byte = span->objSize;
     if(byte > MAX_BYTES)
     {
-        Span *span = PageCache::GetInstance()->MapAddrToSpan(ptr);
         PageCache::GetInstance()->mtx.lock();
         PageCache::GetInstance()->ReleaseSpanToPageCache(span);
         PageCache::GetInstance()->mtx.unlock();

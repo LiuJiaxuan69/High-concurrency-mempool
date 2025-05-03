@@ -80,12 +80,11 @@ Span *PageCache::NewSpan(size_t k)
 
 Span *PageCache::MapAddrToSpan(void *addr)
 {
-    mtx.lock();
     PAGE_ID pageId = (PAGE_ID)addr >> PAGE_SHIFT;
+    std::unique_lock<std::mutex> lock(mtx);
     auto it = PageIdToSpan.find(pageId);
     if (it == PageIdToSpan.end())
         assert(false);
-    mtx.unlock();
     return it->second;
 }
 

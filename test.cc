@@ -74,7 +74,7 @@ namespace ConcurrentTest
             auto output1 = std::this_thread::get_id();
             // std::cout << std::format("{}:{}\n", output1, ptr);
         }
-        for(auto e: tmp) ConcurrentFree(e, 6);
+        for(auto e: tmp) ConcurrentFree(e);
     }
 
     void AllocateFunc2()
@@ -87,7 +87,7 @@ namespace ConcurrentTest
             auto output1 = std::this_thread::get_id();
             // std::cout << std::format("{}:{}\n", output1, ptr);
         }
-        for(auto e: tmp) ConcurrentFree(e, 25);
+        for(auto e: tmp) ConcurrentFree(e);
     }
     void AllocateFunc3()
     {
@@ -99,7 +99,7 @@ namespace ConcurrentTest
             auto output1 = std::this_thread::get_id();
             // std::cout << std::format("{}:{}\n", output1, ptr);
         }
-        for(auto e: tmp) ConcurrentFree(e, 4096);
+        for(auto e: tmp) ConcurrentFree(e);
         
     }
     void AllocateFunc4()
@@ -112,7 +112,7 @@ namespace ConcurrentTest
             auto output1 = std::this_thread::get_id();
             // std::cout << std::format("{}:{}\n", output1, ptr);
         }
-        for(auto e: tmp) ConcurrentFree(e, 257 * 1024);
+        for(auto e: tmp) ConcurrentFree(e);
     }
     void AllocateFunc5()
     {
@@ -124,7 +124,7 @@ namespace ConcurrentTest
             auto output1 = std::this_thread::get_id();
             // std::cout << std::format("{}:{}\n", output1, ptr);
         }
-        for(auto e: tmp) ConcurrentFree(e, 512 * 1024);
+        for(auto e: tmp) ConcurrentFree(e);
     }
     void AllocateFunc6()
     {
@@ -136,7 +136,7 @@ namespace ConcurrentTest
             auto output1 = std::this_thread::get_id();
             // std::cout << std::format("{}:{}\n", output1, ptr);
         }
-        for(auto e: tmp) ConcurrentFree(e, 1024 * 1024);
+        for(auto e: tmp) ConcurrentFree(e);
     }
     void ConcurrentTest()
     {
@@ -174,7 +174,7 @@ namespace ConcurrentTest
 int main()
 {
     // TestObjectPool();
-    // while(true)
-    ConcurrentTest::MaxSizeTest();
+    while(true)
+    {ConcurrentTest::ConcurrentTest();ConcurrentTest::ConcurrentTest();}
     return 0;
 }

@@ -43,6 +43,7 @@ Span* CentralCache::GetOneSpan(SpanList &list, size_t byte)
     PageCache::GetInstance()->mtx.lock();
     Span *span = PageCache::GetInstance()->NewSpan(SizeClass::NumMovePage(byte));
     span->isusing = true;
+    span->objSize = byte;
     PageCache::GetInstance()->mtx.unlock();
 
     //对页切片

@@ -204,6 +204,7 @@ struct Span
     Span *next = nullptr;
     size_t n = 0; //页数量
     size_t useCount = 0;
+    size_t objSize = 0; //小块内存大小
     Object *freelist = nullptr;
     bool isusing = false;
 };
