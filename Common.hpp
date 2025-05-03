@@ -10,9 +10,12 @@
 #include <algorithm>
 #include <unordered_map>
 #include "FixedMempool.hpp"
+#include "Timer.hpp"
+#include "Mutex.hpp"
 
 using std::cin;
 using std::cout;
+using namespace std::chrono_literals;
 
 #undef min
 #undef max
@@ -168,10 +171,8 @@ public:
         {
             return _Index(byte - 64 * 1024, 13) + pre_sum[4];
         }
-        else
-        {
-            assert(false);
-        }
+        assert(false);
+        return 0;
     }
     static inline size_t _Index(size_t byte, size_t alignBit)
     {
@@ -269,5 +270,5 @@ public:
 private:
     Span *head;
 public:
-    std::mutex mtx; //桶锁
+    Mutex mtx; //桶锁
 };

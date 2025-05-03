@@ -3,5 +3,14 @@ project(Test LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")  # MSVC
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
 
-add_executable(test test.cc CentralCache.cc ThreadCache.cc PageCache.cc)
+add_executable(Benchmark 
+    Benchmark.cc 
+    CentralCache.cc 
+    ThreadCache.cc 
+    PageCache.cc
+)
+
+target_link_options(Benchmark PRIVATE /PROFILE)

@@ -24,7 +24,7 @@ private:
 private:
     static PageCache _pageCache;
 public:
-    std::mutex mtx;
+    Mutex mtx;
     SpanList _spanLists[NPAGES + 1];
     std::unordered_map<PAGE_ID, Span*> PageIdToSpan;
 };
