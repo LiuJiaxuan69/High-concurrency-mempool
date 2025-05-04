@@ -128,7 +128,7 @@ int main()
 	BenchmarkConcurrentMalloc(n, 4, 1024);
 	cout << endl << endl;
 
-	//BenchmarkMalloc(n, 4, 1024);
+	BenchmarkMalloc(n, 4, 1024);
 	cout << "==========================================================" << endl;
 	return 0;
 }

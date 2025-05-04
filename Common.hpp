@@ -9,6 +9,7 @@
 #include <mutex>
 #include <algorithm>
 #include <unordered_map>
+#include <functional>
 #include "FixedMempool.hpp"
 #include "Timer.hpp"
 #include "Mutex.hpp"
@@ -26,6 +27,12 @@ using namespace std::chrono_literals;
 // #elif _WIN32
 //     using PAGE_ID = size_t;
 // #endif
+
+#ifdef _WIN64
+    const int PAGE_BYTE = 64;
+#elif _WIN32
+    const int PAGE_BYTE = 32;
+#endif
 
 //size_t天然就适配不同环境
 using PAGE_ID = size_t;

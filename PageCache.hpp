@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Common.hpp"
+#include "PageMap.hpp"
+#include "FixedMempool.hpp"
 
 //饿汉模式
 class PageCache
@@ -26,7 +28,8 @@ private:
 public:
     Mutex mtx;
     SpanList _spanLists[NPAGES + 1];
-    std::unordered_map<PAGE_ID, Span*> PageIdToSpan;
+    // std::unordered_map<PAGE_ID, Span*> PageIdToSpan;
+    TCMalloc_PageMap3<PAGE_BYTE - PAGE_SHIFT> PageIdToSpan;
 };
 
 inline PageCache PageCache::_pageCache;

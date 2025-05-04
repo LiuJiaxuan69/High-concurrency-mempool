@@ -68,9 +68,9 @@ namespace ConcurrentTest
     void AllocateFunc1()
     {
         vector<void *> tmp;
-        for (int i = 1; i <= 1024; ++i)
+        for (int i = 1; i <= 1024 * 1024; ++i)
         {
-            void *ptr = ConcurrentAlloc(6);
+            double *ptr = (double*)ConcurrentAlloc(sizeof(double));
             tmp.push_back(ptr);
             auto output1 = std::this_thread::get_id();
             // std::cout << std::format("{}:{}\n", output1, ptr);
@@ -81,7 +81,7 @@ namespace ConcurrentTest
     void AllocateFunc2()
     {
         vector<void *> tmp;
-        for (int i = 1; i <= 24; ++i)
+        for (int i = 1; i <= 1024 * 128; ++i)
         {
             void *ptr = ConcurrentAlloc(32);
             tmp.push_back(ptr);
@@ -159,26 +159,25 @@ namespace ConcurrentTest
     }
     void ConcurrentTest()
     {
-        // AllocateFunc3();
-        // thread t1(AllocateFunc1);
-        // thread t2(AllocateFunc2);
-        // thread t3(AllocateFunc3);
-        // t1.join();
-        // t2.join();
-        // t3.join();
-        AllocateFunc2();
-        // for(int i = 1; i <= 128; ++i)
-        // {
-        //     if(PageCache::GetInstance()->_spanLists[i].Begin() != \
-        //     PageCache::GetInstance()->_spanLists[i].End())
-        //     {
-        //         cout << i << ":";
-        //     int num = 0;
-        //     for(auto it = PageCache::GetInstance()->_spanLists[i].Begin(); \
-        //     it != PageCache::GetInstance()->_spanLists[i].End(); it = it->next)
-        //     ++num; cout << num << endl;
-        //     }
-        // }
+        thread t1(AllocateFunc1);
+        thread t2(AllocateFunc2);
+        thread t3(AllocateFunc3);
+        t1.join();
+        t2.join();
+        t3.join();
+        // AllocateFunc2();
+        for(int i = 1; i <= 128; ++i)
+        {
+            if(PageCache::GetInstance()->_spanLists[i].Begin() != \
+            PageCache::GetInstance()->_spanLists[i].End())
+            {
+                cout << i << ":";
+            int num = 0;
+            for(auto it = PageCache::GetInstance()->_spanLists[i].Begin(); \
+            it != PageCache::GetInstance()->_spanLists[i].End(); it = it->next)
+            ++num; cout << num << endl;
+            }
+        }
     }
     void MaxSizeTest()
     {
@@ -196,6 +195,7 @@ int main()
     // TestObjectPool();
     // while(true)
     // {ConcurrentTest::ConcurrentTest();ConcurrentTest::ConcurrentTest();}
+    while(true)
     ConcurrentTest::ConcurrentTest();
     return 0;
 }
