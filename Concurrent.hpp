@@ -29,14 +29,6 @@ inline void* ConcurrentAlloc(size_t byte)
     return thread_local_data_->Allocate(byte);
 }
 
-template<class T, class... Args>
-T* testAlloc(Args&&... args)
-{
-    T* ret = (T*)ConcurrentAlloc(sizeof(T));
-    new (ret) T(std::forward<Args>(args)...);
-    return ret;
-}
-
 inline void ConcurrentFree(void *ptr)
 {
     Span *span = PageCache::GetInstance()->MapAddrToSpan(ptr);

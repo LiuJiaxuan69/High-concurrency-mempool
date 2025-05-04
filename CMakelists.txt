@@ -1,17 +1,35 @@
 cmake_minimum_required(VERSION 3.12)
-project(Test LANGUAGES CXX)
+project(TCMalloc VERSION 1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")  # MSVC
 # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
 
-add_executable(Benchmark 
-    Benchmark.cc 
-    CentralCache.cc 
-    ThreadCache.cc 
+# 添加所有源文件
+set(TCMALLOC_SOURCES
+    CentralCache.cc
+    ThreadCache.cc
     PageCache.cc
 )
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+# 生成静态库
+add_library(tcmalloc_static STATIC ${TCMALLOC_SOURCES})
+target_include_directories(tcmalloc_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(tcmalloc_static PROPERTIES OUTPUT_NAME "tcmalloc")
+# 生成动态库
+add_library(tcmalloc_shared SHARED ${TCMALLOC_SOURCES})
+target_include_directories(tcmalloc_shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(tcmalloc_shared PROPERTIES OUTPUT_NAME "tcmalloc")
+
+# add_executable(Benchmark 
+#     Benchmark.cc 
+#     CentralCache.cc 
+#     ThreadCache.cc 
+#     PageCache.cc
+# )
 
 # add_executable(test 
 #     test.cc 
